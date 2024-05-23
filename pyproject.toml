@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "one-day-one-quote-bot"
+version = "0.1.0"
+description = ""
+authors = ["Roman <slyusarrv@yandex.ru>"]
+readme = "README.md"
+packages = [{include = "one_day_one_quote_bot"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+telebot = "^0.0.5"
+python-dotenv = "^1.0.1"
+sqlalchemy = "^2.0.30"
+alembic = "^1.13.1"
+psycopg2 = "^2.9.9"
+isort = "^5.13.2"
+flake8 = "^7.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

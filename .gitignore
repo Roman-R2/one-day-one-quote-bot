@@ -1,0 +1,26 @@
+### IDE ###
+.idea/
+
+### Python ###
+__pycache__/
+*.pyc
+
+### Poetry ###
+/poetry.lock
+
+### .ENV ###
+.env
+.env.dev
+.env.prod
+
+### Logs ###
+logs/*.*
+!logs/.gitkeep
+
+### Alembic ###
+alembic/versions/*.*
+!alembic/versions/.gitkeep
+
+### Other ###
+notes.txt
+/data/main_cites.csv
