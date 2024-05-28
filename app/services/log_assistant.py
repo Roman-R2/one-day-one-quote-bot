@@ -55,6 +55,7 @@ class LogAssistant:
             self.logger.critical(this_message)
 
     @classmethod
-    def put_to_log(cls, logger, log_level='', message: str = '', with_trace: bool = False, with_print: bool = False):
+    def put_to_log(cls, logger, message: str = '', log_level=LogLevel.debug, with_trace: bool = False,
+                   with_print: bool = False):
         return cls(logger=logger, log_level=log_level, message=message, with_trace=with_trace,
                    with_print=with_print)._write()

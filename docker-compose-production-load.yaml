@@ -1,0 +1,39 @@
+services:
+    app:
+        container_name: bot-app
+        image: ${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+        restart: always
+        working_dir: /app
+        environment:
+            - PROD=1
+            - DATABASE=postgres
+#            - DB_NAME=${DB_NAME}
+#            - DB_USER=${DB_USER}
+#            - DB_PASS=${DB_PASS}
+#            - DB_HOST=${DB_HOST}
+#            - DB_PORT=${DB_PORT}
+#            - ALEMBIC_START_REVISION_ID=${ALEMBIC_START_REVISION_ID}
+#            - TOKEN=${TOKEN}
+        env_file:
+            - .env
+        depends_on:
+            - postgres
+
+    postgres:
+        container_name: ${DB_HOST}
+        image: postgres:14.0-alpine
+        restart: always
+        working_dir: /app
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASS}
+            POSTGRES_DB: ${DB_NAME}
+        volumes:
+            - postgres-volume:/var/lib/postgresql/data/
+        ports:
+            - "5432:5432"
+        env_file:
+            - .env
+
+volumes:
+    postgres-volume:

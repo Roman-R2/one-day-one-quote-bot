@@ -7,13 +7,11 @@ WORKDIR /app
 # set environment variables
 #ENV PYTHONDONTWRITEBYTECODE 1
 #ENV PYTHONUNBUFFERED 1
+# RUN apt-get install -y netcat
+RUN apt-get update && apt-get install -y netcat-traditional
 
-#RUN apt-get update && apt-get install -y \
-#    python3.11 \
-#    python3-pip
-
-# install psycopg2 dependencies
-# RUN apt install postgresql-dev gcc python3-dev musl-dev
+## install psycopg2 dependencies
+#RUN apt install postgresql-dev gcc python3-dev musl-dev
 
 # install dependencies
 RUN pip install --upgrade pip
@@ -22,14 +20,21 @@ RUN poetry config virtualenvs.create false
 COPY pyproject.toml .
 RUN poetry install
 
+#RUN apt install -y netcat
+
 # copy entrypoint.sh
 #COPY ./app/docker/entrypoint.sh .
 #RUN sed -i 's/\r$//g' /usr/src/r2-en-bot-app/entrypoint.sh
 #RUN chmod +x /usr/src/r2-en-bot-app/entrypoint.sh
 
-# copy project
-#COPY .env .
+# copy app
+COPY . .
 #COPY main.py .
 
+# RUN alembic upgrade d2f971e1de0e
+
 # run entrypoint.sh
-ENTRYPOINT ["python3", "main.py"]
+#ENTRYPOINT ["python3", "main.py"]
+#ENTRYPOINT ["ping", "8.8.8.8", "-t"]
+#ENTRYPOINT ["ls", "-lah"]
+ENTRYPOINT ["/app/entrypoint.sh"]

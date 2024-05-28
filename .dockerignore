@@ -2,3 +2,11 @@
 
 poetry.lock
 README.md
+
+.env
+.env.dev
+
+logs/*.*
+!logs/.gitkeep
+
+docker-compose.yaml
