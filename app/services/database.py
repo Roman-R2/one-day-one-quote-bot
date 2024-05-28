@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from typing import Any, Dict
 
+import sqlalchemy
 from sqlalchemy import JSON, MetaData, create_engine
 from sqlalchemy.orm import DeclarativeBase, declarative_base, sessionmaker
 
@@ -31,3 +32,17 @@ class DBAdapter:
             raise
         finally:
             session.close()
+
+
+class DatabaseWork:
+    @staticmethod
+    def get_or_create(session, model, dict_for_get: dict, dict_for_create: dict):
+        instance = session.query(model).filter_by(**dict_for_get).first()
+        if instance:
+            return instance
+        else:
+            instance = model(**dict_for_create)
+            session.add(instance)
+            session.commit()
+            return instance
+

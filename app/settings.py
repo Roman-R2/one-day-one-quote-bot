@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Время отправки цитат по умолчанию (МСК)
+DEFAULT_QUOTES_SEND_TIME = '08:00'
+
 # load_dotenv(BASE_DIR / '.env')
 #
 is_prod = True if os.getenv('PROD', '0') == '1' else False
