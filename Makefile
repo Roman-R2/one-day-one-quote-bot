@@ -9,7 +9,7 @@ restart: docker-down docker-up
 
 rebuild: docker-down docker-build docker-up
 
-deploy-on-vds: build-prod-full docker-push vds-down-containers-and-remove-images clear_vds_app_folder vds-copy-app-config vds-up-docker-images
+full-deploy-on-vds: build-prod-full docker-push vds-down-containers-and-remove-images clear_vds_app_folder vds-copy-app-config vds-up-docker-images
 
 # DEV Docker
 docker-build:
@@ -53,16 +53,18 @@ check-code:
 
 # Deploy
 build-production:
-	docker build --pull --file=docker/production/bot-app.dockerfile --tag ${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG} .
+	docker build --pull --file=docker/production/bot-app.dockerfile --tag ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG} .
 
 docker-commit:
-	docker commit ${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+	docker commit ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
 
 docker-push:
-	docker push ${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+	docker push ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+	docker push ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_SCHEDULE_APP}:${IMAGE_TAG}
 
 docker-pull:
-	docker pull ${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+	docker pull ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+	docker pull ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_SCHEDULE_APP}:${IMAGE_TAG}
 
 # ----- install docker on VPS -----
 vds-install-docker:
@@ -78,13 +80,25 @@ vds-install-docker:
 vds-install-make:
 	sudo apt-get install build-essential
 
+add-mirror-in-docker:
+	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'echo "{ "registry-mirrors": ["https://mirror.gcr.io", "https://daocloud.io", "https://c.163.com/", "https://registry.docker-cn.com"] }" > /etc/docker/daemon.json'
+	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'systemctl reload docker'
+	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'cat /etc/docker/daemon.json'
+
+
 # ----- VDS loading section -----
+
+vds-docker-ps:
+	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'docker ps -a'
 
 clear_vds_app_folder:
 	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'rm -rf /app'
 
-ssh-vds_connect:
+ssh-bot:
 	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP}
+
+ssh-registry:
+	ssh ${REMOTE_REGISTRY_VDS_USER_NAME}@${REMOTE_REGISTRY_VDS_IP}
 
 vds-copy-app-config:
 	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'mkdir /app -p'
@@ -97,12 +111,17 @@ vds-copy-app-config:
 	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'rm -rf /app/.env.prod'
 
 
+
 vds-down-containers-and-remove-images:
-	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'docker-compose -f /app/docker-compose-production.yaml down -v --remove-orphans'
-	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'docker rmi -f $(docker images -aq)'
+#	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} "sudo timedatectl set-timezone 'Europe/Moscow'"
+	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'docker-compose -f /app/docker-compose-production-load.yaml down -v --remove-orphans'
+	#ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} "systemctl restart docker"
+#	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} "docker system prune --force --volumes --all"
+#	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} "docker network prune --force"
 
 vds-up-docker-images:
-	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'docker pull ${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}'
+	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'docker pull ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}'
+	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'docker pull ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_SCHEDULE_APP}:${IMAGE_TAG}'
 	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'docker-compose -f /app/docker-compose-production-load.yaml up -d'
 
 vds-server-up: docker-pull

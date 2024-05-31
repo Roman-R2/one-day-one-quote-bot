@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 from pathlib import Path
@@ -7,11 +8,12 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Время отправки цитат по умолчанию (МСК)
-DEFAULT_QUOTES_SEND_TIME = '08:00'
+DEFAULT_QUOTES_SEND_TIME = datetime.datetime.strptime('08:00', '%H:%M')
 
 # load_dotenv(BASE_DIR / '.env')
 #
-is_prod = True if os.getenv('PROD', '0') == '1' else False
+PROD = os.getenv('PROD', '0')
+is_prod = True if PROD == '1' else False
 if not is_prod:
     load_dotenv(BASE_DIR / '.env.dev')
 

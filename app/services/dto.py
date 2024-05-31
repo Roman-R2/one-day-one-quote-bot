@@ -5,3 +5,4 @@ class UserDTO(NamedTuple):
     id: int
     tg_id: int
     username: str
+    first_name: str

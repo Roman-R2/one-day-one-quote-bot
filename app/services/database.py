@@ -16,7 +16,7 @@ class Base(DeclarativeBase):
     }
 
 
-engine = create_engine(settings.DATABASE_URL, future=True, echo=True)
+engine = create_engine(settings.DATABASE_URL, future=True, echo=False if settings.PROD == '1' else True)
 Session = sessionmaker(engine)
 
 

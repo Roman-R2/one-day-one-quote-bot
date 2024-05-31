@@ -4,10 +4,13 @@ some:
 	pause
 
 docker-pull:
-	docker pull ${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+	docker pull ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+
+docker-logs:
+	docker-compose -f /app/docker-compose-production-load.yaml logs -f
 
 vds-server-up: docker-pull
-	docker-compose -f docker-compose-production-load.yaml up -d
+	docker-compose -f /app/docker-compose-production-load.yaml up -d
 
 vds-server-down:
-	docker-compose -f docker-compose-production-load.yaml down -v --remove-orphans
+	docker-compose -f /app/docker-compose-production-load.yaml down -v --remove-orphans

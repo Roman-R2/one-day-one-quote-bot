@@ -1,17 +1,13 @@
 import datetime
 import os
-import time
 
 import requests
 import telebot
-from dotenv import load_dotenv
 from telebot import formatting, types
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from app import settings
 from app.models.models import Quotes
 from app.services.app_logger import AppLogger
-from app.services.database import DatabaseWork
 from app.services.dq_queryes import DBQueryes
 from app.services.dto import UserDTO
 from app.services.first_fill_data import FirstFillTables
@@ -50,17 +46,16 @@ class ButtonsMarkup:
                                                   callback_data='assign_send_data-11:00')
         btn6 = telebot.types.InlineKeyboardButton(text="12:00",
                                                   callback_data='assign_send_data-12:00')
-        markup.add(btn1, btn2, btn3, btn4, btn5, btn6)
+        btn7 = telebot.types.InlineKeyboardButton(text="Не отправлять больше",
+                                                  callback_data='assign_send_data-no')
+        markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7)
         return markup
 
 
 class GetData:
     @staticmethod
     def for_tg_user_data(message):
-        # {'id': 232597319, 'is_bot': False, 'first_name': 'Roman Sl', 'username': 'Roman_R2Z',
-        # 'last_name': None, 'language_code': 'ru', 'can_join_groups': None, 'can_read_all_group_messages': None,
-        # 'supports_inline_queries': None, 'is_premium': None, 'added_to_attachment_menu': None, 'can_connect_to_business': None}`
-        return message.id
+       return message.id
 
 
 if __name__ == '__main__':
@@ -77,22 +72,31 @@ if __name__ == '__main__':
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('assign_send_data'))
     def callback_inline_first(call):
-        user_time = datetime.datetime.strptime(call.data.split('-')[1], '%H:%M')
+        str_end = call.data.split('-')[1]
+        if str_end == 'no':
+            user_time = None
+            message_for_user = f"Цитаты больше не будут отправляться. Вы всегда можете настроить отправку позже."
+        else:
+            user_time = datetime.datetime.strptime(call.data.split('-')[1], '%H:%M')
+            message_for_user = f"Установили время отправки на {user_time.strftime('%H:%M')} МСК"
 
-        DBQueryes.save_quote_send_time(call, user_time)
+        DBQueryes.save_quote_set_send_time(call, user_time)
+
         bot.send_message(
             call.message.chat.id,
-            text=f"Установили время {user_time.strftime('%H:%M')}",
+            text=message_for_user,
         )
 
 
     @bot.message_handler(commands=['start'])
     def start(message):
         # Возьмем или создадим пользовател в БД
+        print(f"{message}")
         user: UserDTO = DBQueryes.current_user(message)
+        DBQueryes.save_quote_set_send_time(message, settings.DEFAULT_QUOTES_SEND_TIME)
         bot.send_message(
             message.chat.id,
-            text=f"Привет {formatting.hbold(user.username)}.\nЯ бот, который будет присылать умную цитату в указанное время.\nРазмышляй, думай, учись.... \n{user}",
+            text=f"Привет {formatting.hbold(user.username) if user.username else formatting.hbold(user.first_name)}.\nЯ бот, который будет присылать умную цитату в указанное время.\nРазмышляй, думай, учись.... \nВремя отправки установлено на {settings.DEFAULT_QUOTES_SEND_TIME.strftime('%H:%M')} по МСК.",
             reply_markup=ButtonsMarkup.start_button_markup()
         )
 

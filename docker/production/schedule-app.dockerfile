@@ -41,4 +41,4 @@ COPY . .
 
 # RUN echo "Europe/Stockholm" > /etc/timezone
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint_schedule.sh"]

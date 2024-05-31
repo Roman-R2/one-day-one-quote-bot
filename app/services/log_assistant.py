@@ -19,9 +19,6 @@ class LogAssistant:
         self.error_type, self.error_value, self.error_trace = sys.exc_info()
 
     def __get_custom_traceback(self) -> str:
-        # self.logger.info(
-        #     type(traceback.extract_tb(error_trace)), traceback.extract_tb(error_trace)
-        # )
         custom_traceback = "\n"
         for line in [
             (item.filename, item.lineno, item.name, item._line)

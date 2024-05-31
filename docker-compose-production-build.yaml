@@ -4,12 +4,33 @@ services:
         build:
 #            context: docker/development
             dockerfile: docker/production/bot-app.dockerfile
-#        command: python3 main.py
-        image: ${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
+        image: ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_BOT}:${IMAGE_TAG}
         restart: always
         environment:
             - PROD=1
             - DATABASE=postgres
+            - TZ=Europe/Moscow
+        volumes:
+            - ./logs:/app/logs
+        env_file:
+            - .env
+            - .env.prod
+        depends_on:
+            - postgres
+
+    schedule-app:
+        container_name: schedule-app
+        build:
+            #            context: docker/development
+            dockerfile: docker/production/schedule-app.dockerfile
+        image: ${REGISTRY_HOST}/${REGISTRY_ADDRESS}/${IMAGE_NAME_FOR_SCHEDULE_APP}:${IMAGE_TAG}
+        restart: always
+        environment:
+            - PROD=1
+            - DATABASE=postgres
+            - TZ=Europe/Moscow
+        volumes:
+            - ./logs:/app/logs
         env_file:
             - .env
             - .env.prod
@@ -23,10 +44,6 @@ services:
         env_file:
             - .env
             - .env.prod
-#        environment:
-#            POSTGRES_USER: ${DB_USER}
-#            POSTGRES_PASSWORD: ${DB_PASS}
-#            POSTGRES_DB: ${DB_NAME}
         volumes:
             - postgres-volume:/var/lib/postgresql/data/
         ports:
