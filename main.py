@@ -1,5 +1,6 @@
 import datetime
 import os
+import time
 
 import requests
 import telebot
@@ -9,7 +10,7 @@ from app import settings
 from app.models.models import Quotes
 from app.services.app_logger import AppLogger
 from app.services.dq_queryes import DBQueryes
-from app.services.dto import UserDTO
+from app.services.dto import UserDTO, QuotesTimeDTO
 from app.services.first_fill_data import FirstFillTables
 from app.services.log_assistant import LogAssistant
 
@@ -20,42 +21,45 @@ class Phrases:
     CONFIGURE_TEXT = "Настроить"
     QUOTES_SEND_TEXT = "Пришли цитату"
     RETURN_MAIN_MENY_TEXT = 'Вернуться в главное меню'
+    GET_BOT_CONFIG = 'Bot check'
 
 
 class ButtonsMarkup:
     @staticmethod
     def start_button_markup():
+        btn_phrases = [Phrases.CONFIGURE_TEXT, Phrases.QUOTES_SEND_TEXT, Phrases.GET_BOT_CONFIG]
+        keyboards = []
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn1 = types.KeyboardButton(Phrases.CONFIGURE_TEXT)
-        btn2 = types.KeyboardButton(Phrases.QUOTES_SEND_TEXT)
-        markup.add(btn1, btn2)
+        for phrase in btn_phrases:
+            keyboards.append(types.KeyboardButton(phrase))
+        markup.add(*keyboards)
         return markup
 
     @staticmethod
     def send_time_button_markup():
+        btn_phrases = {
+            "07:00": 'assign_send_data-07:00',
+            "08:00": 'assign_send_data-08:00',
+            "09:00": 'assign_send_data-09:00',
+            "10:00": 'assign_send_data-10:00',
+            "11:00": 'assign_send_data-11:00',
+            "12:00": 'assign_send_data-12:00',
+            "Не отправлять больше": 'assign_send_data-no',
+        }
+        keyboards = []
         markup = telebot.types.InlineKeyboardMarkup()
-        btn1 = telebot.types.InlineKeyboardButton(text="07:00",
-                                                  callback_data='assign_send_data-07:00')
-        btn2 = telebot.types.InlineKeyboardButton(text="08:00",
-                                                  callback_data='assign_send_data-08:00')
-        btn3 = telebot.types.InlineKeyboardButton(text="09:00",
-                                                  callback_data='assign_send_data-09:00')
-        btn4 = telebot.types.InlineKeyboardButton(text="10:00",
-                                                  callback_data='assign_send_data-10:00')
-        btn5 = telebot.types.InlineKeyboardButton(text="11:00",
-                                                  callback_data='assign_send_data-11:00')
-        btn6 = telebot.types.InlineKeyboardButton(text="12:00",
-                                                  callback_data='assign_send_data-12:00')
-        btn7 = telebot.types.InlineKeyboardButton(text="Не отправлять больше",
-                                                  callback_data='assign_send_data-no')
-        markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7)
+        for text, callback_data in btn_phrases.items():
+            keyboards.append(
+                telebot.types.InlineKeyboardButton(text=text, callback_data=callback_data)
+            )
+        markup.add(*keyboards)
         return markup
 
 
 class GetData:
     @staticmethod
     def for_tg_user_data(message):
-       return message.id
+        return message.id
 
 
 if __name__ == '__main__':
@@ -116,6 +120,38 @@ if __name__ == '__main__':
                 text=DBQueryes().random_quote(),
             )
 
+        def bot_check_action():
+            now_time = datetime.datetime.now()
+            utcnow_time = datetime.datetime.now(datetime.UTC)
+            user: UserDTO = DBQueryes.current_user(message)
+            quotes_time: QuotesTimeDTO | None = DBQueryes.get_quotes_time(user_uuid=user.id)
+
+            msg = (
+                f"Локальное время сервера:\n"
+                f"\t\tnow_time={formatting.hbold(str(now_time))}\n"
+                f"\t\tutcnow_time={formatting.hbold(str(utcnow_time))}\n"
+                f"Ваш пользователь:\n "
+                f"\t\tusername={formatting.hbold(user.username)}\n"
+                f"\t\tfirst_name={formatting.hbold(user.first_name)}\n"
+            )
+            if quotes_time:
+                set_send_time = formatting.hbold(str(quotes_time.set_send_time))
+                last_send_time = formatting.hbold(str(quotes_time.last_send_time))
+                msg = msg + (
+                    f"Цитаты отправляем (время МСК):\n"
+                    f"\t\t{set_send_time}\n"
+                    f"Последняя отправка (время МСК):\n"
+                    f"\t\t{last_send_time}"
+                ),
+
+            else:
+                msg = msg + "В таблице нет данных по времени отправки цитат"
+
+            bot.send_message(
+                message.chat.id,
+                text=msg
+            )
+
         def return_main_menu_action():
             bot.send_message(message.chat.id, text="Вы вернулись в главное меню",
                              reply_markup=ButtonsMarkup.start_button_markup())
@@ -123,6 +159,7 @@ if __name__ == '__main__':
         actions = {
             Phrases.CONFIGURE_TEXT: config_bot_action,
             Phrases.QUOTES_SEND_TEXT: send_quote_action,
+            Phrases.GET_BOT_CONFIG: bot_check_action,
             Phrases.RETURN_MAIN_MENY_TEXT: return_main_menu_action,
         }
 

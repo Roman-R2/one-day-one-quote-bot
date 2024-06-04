@@ -1,12 +1,13 @@
 import datetime
 import random
 import time
+from typing import Tuple
 
 from telebot import formatting
 
 from app.models.models import Quotes, Users, SendTime
 from app.services.database import DBAdapter, DatabaseWork
-from app.services.dto import UserDTO
+from app.services.dto import UserDTO, QuotesTimeDTO
 
 
 class DBQueryes:
@@ -59,3 +60,12 @@ class DBQueryes:
                 instance.last_send_time = datetime.datetime.now().replace(tzinfo=None)
                 session.add(instance)
             session.commit()
+
+    @staticmethod
+    def get_quotes_time(user_uuid) -> QuotesTimeDTO | None:
+        with DBAdapter().get_session() as session:
+            send_time_obj = session.query(SendTime).filter_by(user=user_uuid).first()
+            if send_time_obj is None:
+                return None
+            else:
+                return QuotesTimeDTO(set_send_time=send_time_obj.set_send_time, last_send_time=send_time_obj.last_send_time)

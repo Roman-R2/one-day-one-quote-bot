@@ -24,3 +24,5 @@ alembic/versions/*.*
 ### Other ###
 notes.txt
 /data/main_cites.csv
+/dozzle-data/users.yml
+

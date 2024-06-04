@@ -29,6 +29,7 @@ services:
             - .env
         depends_on:
             - postgres
+            - app
 
     postgres:
         container_name: ${DB_HOST}
@@ -42,9 +43,20 @@ services:
         volumes:
             - postgres-volume:/var/lib/postgresql/data/
         ports:
-            - "5432:5432"
+            - "5477:5432"
         env_file:
             - .env
+
+    dozzle:
+        container_name: dozzle
+        image: amir20/dozzle:latest
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /app/dozzle-data:/data/
+        ports:
+            - 8888:8080
+        environment:
+            DOZZLE_AUTH_PROVIDER: simple
 
 volumes:
     postgres-volume:

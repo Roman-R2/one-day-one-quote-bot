@@ -20,26 +20,31 @@ async def get_tg_id_users_for_send() -> Tuple:
         # Выбрать всех пользователей у кого сегодня не было отправки и
         today = datetime.date.today()
         now = datetime.datetime.now()
-        users = session.query(SendTime, Users).join(Users).where(
-            or_(
-                SendTime.last_send_time == None,
-                SendTime.last_send_time < today
+        try:
+            users = session.query(SendTime, Users).join(Users).where(
+                or_(
+                    SendTime.last_send_time == None,
+                    SendTime.last_send_time < today
+                )
             )
-        )
-        tg_ids = []
-        for send_time, user in users:
-            send_time: SendTime = send_time
-            user: Users = user
+            tg_ids = []
+            for send_time, user in users:
+                send_time: SendTime = send_time
+                user: Users = user
 
-            delta_seconds = 30
-            now_set_send_time = now.replace(
-                hour=send_time.set_send_time.hour,
-                minute=send_time.set_send_time.minute,
-                second=send_time.set_send_time.second,
-                microsecond=0
-            )
-            if now - datetime.timedelta(seconds=delta_seconds) < now_set_send_time < now:
-                tg_ids.append(user.tg_id)
+                delta_seconds = 30
+                now_set_send_time = now.replace(
+                    hour=send_time.set_send_time.hour,
+                    minute=send_time.set_send_time.minute,
+                    second=send_time.set_send_time.second,
+                    microsecond=0
+                )
+                if now - datetime.timedelta(seconds=delta_seconds) < now_set_send_time < now:
+                    tg_ids.append(user.tg_id)
+        except Exception:
+            LogAssistant.put_to_log(logger=LOGGER, message=f'Ошибка запроса к БД',
+                                    with_print=True, with_trace=True)
+            return tuple()
 
     return tuple(tg_ids)
 

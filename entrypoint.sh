@@ -3,7 +3,7 @@ echo "Into entrypoint.sh..."
 
 if [ "$DATABASE" = "postgres" ]; then
 
-  echo "Waiting for postgres..."
+  echo "Waiting for postgres $DB_PORT on port $DB_HOST..."
 
   while ! nc -z "$DB_HOST" "$DB_PORT"; do
     sleep 0.1

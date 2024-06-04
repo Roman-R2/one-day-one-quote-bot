@@ -103,8 +103,10 @@ ssh-registry:
 vds-copy-app-config:
 	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'mkdir /app -p'
 	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'mkdir /app/data -p'
+	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'mkdir /app/dozzle-data -p'
 	scp docker-compose-production-load.yaml ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP}:${REMOTE_VDS_PROJECT_FOLDER}
 	scp MakefileForVDS ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP}:${REMOTE_VDS_PROJECT_FOLDER}/Makefile
+	scp dozzle-data/users.yml ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP}:${REMOTE_VDS_PROJECT_FOLDER}/dozzle-data/users.yml
 	scp .env ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP}:${REMOTE_VDS_PROJECT_FOLDER}/.env
 	scp .env.prod ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP}:${REMOTE_VDS_PROJECT_FOLDER}/.env.prod
 	ssh ${REMOTE_VDS_USER_NAME}@${REMOTE_VDS_IP} 'cat /app/.env.prod >> /app/.env'
