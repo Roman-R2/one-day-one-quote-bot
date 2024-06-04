@@ -26,8 +26,8 @@ class Users(ExtendedBaseWithTime):
     __tablename__ = 'users'
 
     tg_id: Mapped[int] = mapped_column(Integer, nullable=False, comment='Id telegram user')
-    is_bot: Mapped[bool] = mapped_column(Boolean, comment='telegram user is bot')
-    username: Mapped[str] = mapped_column(String, comment='Username of telegram user')
+    is_bot: Mapped[bool] = mapped_column(Boolean, nullable=True, comment='telegram user is bot')
+    username: Mapped[str] = mapped_column(String, nullable=True, comment='Username of telegram user')
     first_name: Mapped[Optional[str]] = mapped_column(String, comment='User first name')
     last_name: Mapped[Optional[str]] = mapped_column(String, comment='User last name')
     language_code: Mapped[Optional[str]] = mapped_column(String, comment='User language code')
